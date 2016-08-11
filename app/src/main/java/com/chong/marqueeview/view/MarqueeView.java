@@ -57,11 +57,11 @@ public class MarqueeView extends ViewFlipper {
     /**
      * 进入动画
      */
-    private int mAnimIn = 0;
+    private int mAnimInId = 0;
     /**
      * 退出动画
      */
-    private int mAnimOut = 0;
+    private int mAnimOutId = 0;
     private static final int TEXT_GRAVITY_LEFT = 0, TEXT_GRAVITY_CENTER = 1, TEXT_GRAVITY_RIGHT = 2;
 
     public MarqueeView(Context context, AttributeSet attrs) {
@@ -94,16 +94,17 @@ public class MarqueeView extends ViewFlipper {
                 gravity = Gravity.RIGHT | Gravity.CENTER_VERTICAL;
                 break;
         }
-        mAnimIn = typedArray.getResourceId(R.styleable.MarqueeViewStyle_mvAnimIn, 0);
-        mAnimOut = typedArray.getResourceId(R.styleable.MarqueeViewStyle_mvAnimOut, 0);
+        mAnimInId = typedArray.getResourceId(R.styleable.MarqueeViewStyle_mvAnimIn, 0);
+        mAnimOutId = typedArray.getResourceId(R.styleable.MarqueeViewStyle_mvAnimOut, 0);
         typedArray.recycle();
 
+        // 设置翻页间隔时间
         setFlipInterval(mInterval);
 
         // 设置进入动画
         Animation animIn;
-        if (mAnimIn != 0) {
-            animIn = AnimationUtils.loadAnimation(mContext, mAnimIn);
+        if (mAnimInId != 0) {
+            animIn = AnimationUtils.loadAnimation(mContext, mAnimInId);
         } else {
             animIn = AnimationUtils.loadAnimation(mContext, R.anim.anim_marquee_in);
         }
@@ -114,8 +115,8 @@ public class MarqueeView extends ViewFlipper {
 
         // 设置退出动画
         Animation animOut;
-        if (mAnimOut != 0) {
-            animOut = AnimationUtils.loadAnimation(mContext, mAnimOut);
+        if (mAnimOutId != 0) {
+            animOut = AnimationUtils.loadAnimation(mContext, mAnimOutId);
         } else {
             animOut = AnimationUtils.loadAnimation(mContext, R.anim.anim_marquee_out);
         }
@@ -125,7 +126,36 @@ public class MarqueeView extends ViewFlipper {
         setOutAnimation(animOut);
     }
 
-    // 根据字符串启动轮播
+    /**
+     * 根据字符串数组启动轮播
+     *
+     * @param notices 字符串数组
+     */
+    public void startWithList(List<String> notices) {
+        setNotices(notices);
+        initViews();
+        start();
+    }
+
+    /**
+     * 继续轮播
+     */
+    public void continueFlipping() {
+        if (getChildCount() != 0) {
+            showNext();
+            start();
+        } else {
+            throw new RuntimeException("Please init childView!");
+        }
+
+    }
+
+
+    /**
+     * 根据宽度和公告字符串启动轮播
+     *
+     * @param notice 字符串
+     */
     public void startWithText(final String notice) {
         if (TextUtils.isEmpty(notice)) {
             return;
@@ -139,13 +169,12 @@ public class MarqueeView extends ViewFlipper {
         });
     }
 
-    // 根据字符串list启动轮播
-    public void startWithList(List<String> notices) {
-        setNotices(notices);
-        start();
-    }
-
-    // 根据宽度和公告字符串启动轮播
+    /**
+     * 根据宽度和公告字符串启动轮播
+     *
+     * @param notice 字符串
+     * @param width  view宽度
+     */
     private void startWithFixedWidth(String notice, int width) {
         // 获取字符串字符个数
         int noticeLength = notice.length();
@@ -167,17 +196,66 @@ public class MarqueeView extends ViewFlipper {
                 mNotices.add(notice.substring(startIndex, endIndex));
             }
         }
+        initViews();
         start();
     }
 
-    // 启动轮播
+    /**
+     * 初始化view
+     */
+    private void initViews() {
+        if (mNotices == null || mNotices.size() == 0) {
+            throw new RuntimeException("Please set data!");
+        }
+        removeAllViews();
+
+        for (int i = 0; i < mNotices.size(); i++) {
+            final TextView textView = createTextView(mNotices.get(i), i);
+            final int position = i;
+            textView.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mOnItemClickListener != null) {
+                        mOnItemClickListener.onItemClick(position, textView);
+                    }
+                }
+            });
+            addView(textView);
+        }
+    }
+
+    /**
+     * 启动轮播
+     */
     public boolean start() {
+        if (mNotices.size() > 1) {
+            startFlipping();
+        }
+        return true;
+    }
+
+
+    public boolean start(int startPosition) {
         if (mNotices == null || mNotices.size() == 0) {
             return false;
         }
         removeAllViews();
 
-        for (int i = 0; i < mNotices.size(); i++) {
+        int size = mNotices.size();
+        for (int i = startPosition; i < size; i++) {
+            final TextView textView = createTextView(mNotices.get(i), i);
+            final int position = i;
+            textView.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mOnItemClickListener != null) {
+                        mOnItemClickListener.onItemClick(position, textView);
+                    }
+                }
+            });
+            addView(textView);
+        }
+        for (int i = 0; i < startPosition; i++) {
             final TextView textView = createTextView(mNotices.get(i), i);
             final int position = i;
             textView.setOnClickListener(new OnClickListener() {
@@ -197,7 +275,20 @@ public class MarqueeView extends ViewFlipper {
         return true;
     }
 
-    // 创建ViewFlipper中的TextView
+    /**
+     * 停止轮播
+     */
+    public void stop() {
+        stopFlipping();
+    }
+
+    /**
+     * 创建ViewFlipper中的TextView
+     *
+     * @param text     文本内容
+     * @param position TextView的position
+     * @return TextView
+     */
     private TextView createTextView(String text, int position) {
         TextView tv = new TextView(mContext);
         tv.setGravity(gravity);
@@ -209,40 +300,45 @@ public class MarqueeView extends ViewFlipper {
         return tv;
     }
 
+    /**
+     * 获得当前TextView的position
+     *
+     * @return position
+     */
     public int getPosition() {
         return (int) getCurrentView().getTag();
     }
 
+    /**
+     * 获得字符串数组
+     *
+     * @return 字符串数组
+     */
     public List<String> getNotices() {
         return mNotices;
     }
 
+    /**
+     * 设置字符串数组
+     *
+     * @param notices 字符串数组
+     */
     public void setNotices(List<String> notices) {
         this.mNotices = notices;
     }
 
+    /**
+     * 设置TextView点击监听事件
+     *
+     * @param mOnItemClickListener 点击监听接口
+     */
     public void setOnItemClickListener(OnItemClickListener mOnItemClickListener) {
         this.mOnItemClickListener = mOnItemClickListener;
     }
 
     /**
-     * 设置进入动画
-     *
-     * @param animInId 进入动画id
+     * TextView点击监听接口
      */
-    public void setAnimIn(int animInId) {
-        this.mAnimIn = animInId;
-    }
-
-    /**
-     * 设置退出动画
-     *
-     * @param animOutId 退出动画id
-     */
-    public void setAnimOut(int animOutId) {
-        this.mAnimOut = animOutId;
-    }
-
     public interface OnItemClickListener {
         void onItemClick(int position, TextView textView);
     }
