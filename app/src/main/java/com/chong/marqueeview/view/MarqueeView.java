@@ -43,7 +43,7 @@ public class MarqueeView extends ViewFlipper {
      */
     private int mTextSize = 14;
     /**
-     * 文字颜色
+     * 文字颜色，默认白色
      */
     private int mTextColor = 0xffffffff;
     /**
@@ -63,6 +63,10 @@ public class MarqueeView extends ViewFlipper {
      */
     private int mAnimOutId = 0;
     private static final int TEXT_GRAVITY_LEFT = 0, TEXT_GRAVITY_CENTER = 1, TEXT_GRAVITY_RIGHT = 2;
+    /**
+     * 是否已经轮播过
+     */
+    private boolean mStarted = false;
 
     public MarqueeView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -132,9 +136,14 @@ public class MarqueeView extends ViewFlipper {
      * @param notices 字符串数组
      */
     public void startWithList(List<String> notices) {
-        setNotices(notices);
-        initViews();
+        if (mNotices.isEmpty()) {
+            setNotices(notices);
+        }
+        if (getChildCount() == 0) {
+            initViews();
+        }
         start();
+        mStarted = true;
     }
 
     /**
@@ -176,6 +185,7 @@ public class MarqueeView extends ViewFlipper {
      * @param width  view宽度
      */
     private void startWithFixedWidth(String notice, int width) {
+        mNotices.clear();
         // 获取字符串字符个数
         int noticeLength = notice.length();
         // view宽度
@@ -198,6 +208,7 @@ public class MarqueeView extends ViewFlipper {
         }
         initViews();
         start();
+        mStarted = true;
     }
 
     /**
@@ -227,52 +238,16 @@ public class MarqueeView extends ViewFlipper {
     /**
      * 启动轮播
      */
-    public boolean start() {
-        if (mNotices.size() > 1) {
-            startFlipping();
-        }
-        return true;
-    }
-
-
-    public boolean start(int startPosition) {
+    public void start() {
         if (mNotices == null || mNotices.size() == 0) {
-            return false;
+            throw new RuntimeException("Please set data!");
         }
-        removeAllViews();
-
-        int size = mNotices.size();
-        for (int i = startPosition; i < size; i++) {
-            final TextView textView = createTextView(mNotices.get(i), i);
-            final int position = i;
-            textView.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (mOnItemClickListener != null) {
-                        mOnItemClickListener.onItemClick(position, textView);
-                    }
-                }
-            });
-            addView(textView);
+        if (getChildCount() == 0) {
+            throw new RuntimeException("Please init childView!");
         }
-        for (int i = 0; i < startPosition; i++) {
-            final TextView textView = createTextView(mNotices.get(i), i);
-            final int position = i;
-            textView.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (mOnItemClickListener != null) {
-                        mOnItemClickListener.onItemClick(position, textView);
-                    }
-                }
-            });
-            addView(textView);
-        }
-
         if (mNotices.size() > 1) {
             startFlipping();
         }
-        return true;
     }
 
     /**
@@ -325,6 +300,7 @@ public class MarqueeView extends ViewFlipper {
      */
     public void setNotices(List<String> notices) {
         this.mNotices = notices;
+        initViews();
     }
 
     /**
@@ -334,6 +310,15 @@ public class MarqueeView extends ViewFlipper {
      */
     public void setOnItemClickListener(OnItemClickListener mOnItemClickListener) {
         this.mOnItemClickListener = mOnItemClickListener;
+    }
+
+    /**
+     * 获得是否已经轮播过
+     *
+     * @return 是否轮播过
+     */
+    public boolean isStarted() {
+        return mStarted;
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.chong.marqueeview;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -21,6 +22,7 @@ public class MainActivity extends AppCompatActivity {
     private MarqueeView marqueeView5;
     private Button startBtn;
     private Button endBtn;
+    private Button nextBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +82,14 @@ public class MainActivity extends AppCompatActivity {
                     marqueeView.stop();
                     Toast.makeText(getApplicationContext(), "停止位置：" + String.valueOf(marqueeView.getPosition()), Toast.LENGTH_SHORT).show();
                 }
+            }
+        });
+
+        nextBtn = (Button) findViewById(R.id.btn_next);
+        nextBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, RecycleViewActivity.class));
             }
         });
     }
