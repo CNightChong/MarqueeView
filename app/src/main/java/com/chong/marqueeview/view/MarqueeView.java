@@ -153,8 +153,6 @@ public class MarqueeView extends ViewFlipper {
         if (getChildCount() != 0) {
             showNext();
             start();
-        } else {
-            throw new RuntimeException("Please init childView!");
         }
 
     }
@@ -216,7 +214,7 @@ public class MarqueeView extends ViewFlipper {
      */
     private void initViews() {
         if (mNotices == null || mNotices.size() == 0) {
-            throw new RuntimeException("Please set data!");
+            return;
         }
         removeAllViews();
 
@@ -239,12 +237,6 @@ public class MarqueeView extends ViewFlipper {
      * 启动轮播
      */
     public void start() {
-        if (mNotices == null || mNotices.size() == 0) {
-            throw new RuntimeException("Please set data!");
-        }
-        if (getChildCount() == 0) {
-            throw new RuntimeException("Please init childView!");
-        }
         if (mNotices.size() > 1) {
             startFlipping();
         }
@@ -271,6 +263,9 @@ public class MarqueeView extends ViewFlipper {
         tv.setTextColor(mTextColor);
         tv.setTextSize(mTextSize);
         tv.setSingleLine(mIsSingleLine);
+        if (mIsSingleLine) {
+            tv.setEllipsize(TextUtils.TruncateAt.END);
+        }
         tv.setTag(position);
         return tv;
     }
