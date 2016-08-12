@@ -27,9 +27,8 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         holder.tvTitle.setText(mData.get(position).getTitle());
-        // 开始轮播，为了设置已经轮播的标记
-        holder.marqueeView.startWithList(mData.get(position).getContents());
-        holder.marqueeView.stop();
+        // 添加字符串数组
+        holder.marqueeView.setNotices(mData.get(position).getContents());
     }
 
     @Override

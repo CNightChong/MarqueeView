@@ -58,50 +58,36 @@ public class RecycleViewActivity extends AppCompatActivity {
         @Override
         public void handleMessage(Message msg) {
             if (msg.what == WHAT) {
-                mRecyclerView.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        // 第一个完全显示的item
-                        int first = mManager.findFirstCompletelyVisibleItemPosition();
-                        // 最后一个完全显示的item
-                        int last = mManager.findLastCompletelyVisibleItemPosition();
-                        // 随机数 [first,last]
-                        int index = mRandom.nextInt(last + 1);
-                        if (index < first) {
-                            index = first;
-                        }
-                        // 获得每个完全显示的item
-                        for (int i = first; i < last + 1; i++) {
-                            View view = mRecyclerView.getChildAt(index);
-                            if (null != mRecyclerView.getChildViewHolder(view)) {
-                                // 获得item的ViewHolder
-                                MyAdapter.ViewHolder holder = (MyAdapter.ViewHolder) mRecyclerView.getChildViewHolder(view);
-                                if (i == index) { // 如果是随机选中的item
-                                    // marqueeView已经轮播过
-                                    if (holder.marqueeView.isStarted()) {
-                                        // 继续轮播
-                                        holder.marqueeView.continueFlipping();
-                                    } else {
-                                        // 从0开始
-                                        holder.marqueeView.start();
-                                    }
-                                } else {
-                                    // 停止轮播
-                                    holder.marqueeView.stop();
-                                }
-
-                            }
-                        }
-
-                        Message message = obtainMessage(WHAT);
-                        sendMessageDelayed(message, 2000);
+                // 第一个完全显示的item
+                int first = mManager.findFirstCompletelyVisibleItemPosition();
+                // 最后一个完全显示的item
+                int last = mManager.findLastCompletelyVisibleItemPosition();
+                // 随机数 [first,last]
+                int index = mRandom.nextInt(last + 1);
+                if (index < first) {
+                    index = first;
+                }
+                // 获得随机到的itemview
+                View currView = mRecyclerView.getChildAt(index);
+                if (currView != null && mRecyclerView.getChildViewHolder(currView) != null) {
+                    // 获得item的ViewHolder
+                    MyAdapter.ViewHolder currHolder = (MyAdapter.ViewHolder) mRecyclerView.getChildViewHolder(currView);
+                    if (!currHolder.marqueeView.isFlipping()) {
+                        // 进行一次轮播
+                        currHolder.marqueeView.continueFlipping();
+                        currHolder.marqueeView.stop();
                     }
-                });
+                }
 
-
+                Message message = obtainMessage(WHAT);
+                sendMessageDelayed(message, 2000);
             }
         }
     };
 
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mHandler.removeMessages(WHAT);
+    }
 }

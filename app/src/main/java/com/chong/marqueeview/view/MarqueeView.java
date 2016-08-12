@@ -63,10 +63,6 @@ public class MarqueeView extends ViewFlipper {
      */
     private int mAnimOutId = 0;
     private static final int TEXT_GRAVITY_LEFT = 0, TEXT_GRAVITY_CENTER = 1, TEXT_GRAVITY_RIGHT = 2;
-    /**
-     * 是否已经轮播过
-     */
-    private boolean mStarted = false;
 
     public MarqueeView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -143,7 +139,6 @@ public class MarqueeView extends ViewFlipper {
             initViews();
         }
         start();
-        mStarted = true;
     }
 
     /**
@@ -206,7 +201,6 @@ public class MarqueeView extends ViewFlipper {
         }
         initViews();
         start();
-        mStarted = true;
     }
 
     /**
@@ -305,15 +299,6 @@ public class MarqueeView extends ViewFlipper {
      */
     public void setOnItemClickListener(OnItemClickListener mOnItemClickListener) {
         this.mOnItemClickListener = mOnItemClickListener;
-    }
-
-    /**
-     * 获得是否已经轮播过
-     *
-     * @return 是否轮播过
-     */
-    public boolean isStarted() {
-        return mStarted;
     }
 
     /**
