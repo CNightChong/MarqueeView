@@ -88,6 +88,6 @@ public class RecycleViewActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mHandler.removeMessages(WHAT);
+        mHandler.removeCallbacksAndMessages(null);
     }
 }
